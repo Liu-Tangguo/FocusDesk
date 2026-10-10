@@ -1,0 +1,25 @@
+{
+  "name": "专注工作台 FocusDesk",
+  "short_name": "FocusDesk",
+  "description": "平板专注工作台：番茄钟 + 待办 + 时间块，纯本地离线运行。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0e1116",
+  "theme_color": "#0e1116",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FocusDesk 测试入口</title>
+<style>
+ body{font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#0e1116;color:#e7ecf3;margin:0;padding:26px}
+ h1{font-size:22px;margin:0 0 6px} h2{font-size:16px;margin:22px 0 8px;color:#9fb4d4}
+ a{color:#6ea8fe} code{background:#1b2230;padding:2px 6px;border-radius:6px;font-size:13px}
+ .row{background:#171e29;border:1px solid #27303f;border-radius:12px;padding:14px 16px;margin:8px 0}
+ .exp{color:#93a1b5;font-size:13px}
+ ul{margin:6px 0 0 18px} li{margin:3px 0}
+ .ok{color:#3fb950}.warn{color:#d29922}.bad{color:#f4695f}
+ pre{background:#131924;border:1px solid #27303f;border-radius:10px;padding:12px;overflow:auto;font-size:13px}
+</style>
+</head>
+<body>
+<h1>FocusDesk · 测试入口</h1>
+<p class="exp">平板专注工作台（番茄钟 + 待办 + 时间块）。下面每个链接都写明「预期结果」，点开即可人工核对。</p>
+
+<div class="row">
+  <b>1) 正常入口（空数据）</b> — <a href="./index.html" target="_blank">./index.html</a><br>
+  <span class="exp">预期：深色看板，三栏（左：时钟+番茄钟，中：待办，右：时间块时间轴）；顶部「屏幕常亮」状态显示「已开启」或明确的降级提示（<b>不会假装生效</b>）。</span>
+</div>
+
+<div class="row">
+  <b>2) 演示数据入口</b> — <a href="./index.html?seed=1" target="_blank">./index.html?seed=1</a><br>
+  <span class="exp">预期：待办 3 条（1 条已完成）；今天时间轴出现 09:00 学习 / 10:00 休息 / 10:30 写代码 / 14:00 阅读 四个块；当前时间段（若在区间内）高亮。</span>
+</div>
+
+<div class="row">
+  <b>3) 自检探针（机器可读）</b> — <a href="./index.html?probe=1&amp;nomotion=1" target="_blank">./index.html?probe=1&amp;nomotion=1</a><br>
+  <span class="exp">预期：标签页标题变成 <code>PROBE-OK todos=.. blocks=.. phase=focus running=0 wake=yes sw=yes theme=dark</code>。<br>
+  命令行核对：<code>chrome --headless=new --dump-dom "file:///.../index.html?probe=1&amp;nomotion=1" | grep -o "PROBE-OK[^<]*"</code></span>
+</div>
+
+<div class="row">
+  <b>4) 自动启动计时器（视觉核对）</b> — <a href="./index.html?seed=1&amp;auto=1&amp;nomotion=1" target="_blank">./index.html?seed=1&amp;auto=1&amp;nomotion=1</a><br>
+  <span class="exp">预期：番茄钟立即进入「进行中…」，圆环开始走，按钮变为「暂停」。</span>
+</div>
+
+<h2>手工检查清单</h2>
+<ul>
+  <li><span class="ok">☐</span> 番茄钟：开始 → 暂停 → 继续 → 跳过 → 结束本阶段，按钮文字与状态同步；蓝色圆环随剩余时间收缩。</li>
+  <li><span class="ok">☐</span> 刷新页面后：若计时中，剩余时间继续走；若已走完，弹提示并按规则进入休息/专注。</li>
+  <li><span class="ok">☐</span> 待办：添加 / 勾选完成 / 取消完成 / 双击改名 / 删除 / 过滤（全部·未完成·已完成）。</li>
+  <li><span class="ok">☐</span> 时间块：空白处点击新建 1 小时；按住拖动圈选自定义时段；拖动块移动、拖上下边缘改时长；点击块编辑/删除。</li>
+  <li><span class="ok">☐</span> 重叠：两个块时间相交时边框变红并弹提示，<b>不会自动覆盖</b>。</li>
+  <li><span class="ok">☐</span> 联动：待办「专注」按钮 / 时间块编辑里的「用关联待办专注」→ 番茄钟显示当前任务；专注结束后「今日专注次数 / 累计分钟」增加。</li>
+  <li><span class="ok">☐</span> 位移：等待 60–120 秒，背景光斑与时钟有极轻微平滑位移；点击、拖拽不受影响。</li>
+  <li><span class="ok">☐</span> 设置：修改各时长、长休息轮次、位移间隔、时间轴范围、浅色主题；保存后立即生效。</li>
+  <li><span class="ok">☐</span> 导出 → 得到 JSON 备份；清空后导入该文件 → 数据恢复。</li>
+</ul>
+
+<h2>自动化命令（在项目目录内）</h2>
+<pre># 1) 静态语法检查
+node --check app.js
+
+# 2) 本地起服务（PWA / 屏幕常亮需要安全上下文，file:// 只能验证界面）
+python3 -m http.server 8173
+
+# 3) 无头探针（Windows Chrome 路径示例）
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu ^
+  --virtual-time-budget=9000 --dump-dom ^
+  "http://localhost:8173/index.html?probe=1&nomotion=1" | findstr PROBE-OK</pre>
+
+<h2>已知平台限制</h2>
+<ul>
+  <li>屏幕常亮依赖浏览器 <code>Screen Wake Lock API</code>，且需要<b>安全上下文</b>（<code>https://</code> 或 <code>http://localhost</code>）。用局域网 http 打开时可能不可用。</li>
+  <li>系统省电模式 / 浏览器后台限制可能强行回收常亮，页面会显示「已释放」而非假装正常。</li>
+  <li>PWA 安装（Service Worker）同样需要安全上下文，<code>file://</code> 打开时不生效。</li>
+  <li>清除浏览器数据会清空本地数据，请用「导出备份」留底。</li>
+</ul>
+</body>
+</html>
